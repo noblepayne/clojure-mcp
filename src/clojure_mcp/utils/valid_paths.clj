@@ -44,10 +44,12 @@
               (some (fn [allowed-canonical]
                       ;; Check if normalized path starts with allowed dir plus separator
                       ;; or if it equals the allowed dir exactly
-                      (or (= normalized-path allowed-canonical)
-                          (str/starts-with? normalized-path
-                                            (str allowed-canonical
-                                                 (System/getProperty "file.separator")))))
+                      (let [sep (System/getProperty "file.separator")
+                            prefix (if (= allowed-canonical sep)
+                                     sep
+                                     (str allowed-canonical sep))]
+                        (or (= normalized-path allowed-canonical)
+                            (str/starts-with? normalized-path prefix))))
                     canonical-allowed-dirs))
         normalized-path
         (throw (ex-info (str "Your path:\n" normalized-path

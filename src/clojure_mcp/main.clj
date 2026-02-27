@@ -1,47 +1,23 @@
 (ns clojure-mcp.main
+  (:gen-class)
   (:require [clojure-mcp.core :as core]
             [clojure-mcp.logging :as logging]
             [clojure-mcp.prompts :as prompts]
             [clojure-mcp.resources :as resources]
             [clojure-mcp.tools :as tools]))
 
-;; Delegate to resources namespace
-;; Note: working-dir param kept for compatibility with core API but unused
 (defn make-resources [nrepl-client-atom _working-dir]
   (resources/make-resources nrepl-client-atom))
 
-;; Delegate to prompts namespace
-;; Note: working-dir param kept for compatibility with core API but unused
 (defn make-prompts [nrepl-client-atom _working-dir]
   (prompts/make-prompts nrepl-client-atom))
 
 (defn make-tools [nrepl-client-atom _working-directory]
-  ;; Use the refactored tools builder
-  ;; Note: working-directory param kept for compatibility with core API but unused
-  (tools/build-all-tools nrepl-client-atom))
-
-;; DEPRECATED but maintained for backward compatability
-(defn ^:deprecated my-prompts
-  ([working-dir]
-   (my-prompts working-dir core/nrepl-client-atom))
-  ([working-dir nrepl-client-atom]
-   (make-prompts nrepl-client-atom working-dir)))
-
-(defn ^:deprecated my-resources [nrepl-client-atom _working-dir]
-  (resources/make-resources nrepl-client-atom))
-
-(defn ^:deprecated my-tools [nrepl-client-atom]
   (tools/build-all-tools nrepl-client-atom))
 
 (defn start-mcp-server
-  "Entry point for MCP server startup.
-
-   When :project-dir is NOT provided, requires a REPL connection to discover
-   the project directory. When :project-dir IS provided, REPL is optional.
-
-   REPL initialization happens lazily on first eval-code call."
+  "Entry point for MCP server startup."
   [opts]
-  ;; Configure logging before starting the server
   (logging/configure-logging!
    {:log-file (get opts :log-file logging/default-log-file)
     :enable-logging? (get opts :enable-logging? false)
@@ -54,53 +30,30 @@
 
 (defn start
   "Entry point for running from project directory.
-
-   Sets :project-dir to current working directory unless :not-cwd is true.
-   This allows running without an immediate REPL connection - REPL initialization
-   happens lazily when first needed.
-
-   Options:
-   - :not-cwd - If true, does NOT set project-dir to cwd (default: false)
-   - :port - Optional nREPL port (REPL is optional when project-dir is set)
-   - All other options supported by start-mcp-server"
+   Coerces :project-dir to string to handle CLI function objects like '/'."
   [opts]
-  (let [not-cwd? (get opts :not-cwd false)
-        opts' (if not-cwd?
-                opts
-                (assoc opts :project-dir (System/getProperty "user.dir")))]
+  (let [project-dir (some-> (get opts :project-dir) str)
+        opts' (cond-> opts
+                project-dir (assoc :project-dir project-dir))]
     (start-mcp-server opts')))
 
-;; not sure if this is even needed
+(defn- parse-cli-args [args]
+  (if (and (= 1 (count args)) (map? (first args)))
+    (first args)
+    (loop [remaining args
+           result {}]
+      (if (empty? remaining)
+        result
+        (let [k (first remaining)
+              v (second remaining)
+              ;; Ensure key is a keyword regardless of shell/clj-exec-fn parsing
+              k-kw (cond
+                     (keyword? k) k
+                     (symbol? k) (keyword (name k))
+                     (string? k) (keyword (clojure.string/replace k #"^:" ""))
+                     :else (keyword (str k)))]
+          (recur (drop 2 remaining)
+                 (assoc result k-kw v)))))))
 
-;; start the server
-
-;; Example parameterized prompt
-(defn code-review-prompt-example []
-  {:name "code-review-prompt"
-   :description "Generate a code review prompt for a specific file or namespace"
-   :arguments [{:name "file-path"
-                :description "The file path to review"
-                :required? true}
-               {:name "focus-areas"
-                :description "Specific areas to focus on (e.g., 'performance,style,testing')"
-                :required? false}]
-   :prompt-fn (fn [_ request-args clj-result-k]
-                (let [file-path (get request-args "file-path")
-                      focus-areas (get request-args "focus-areas" "general code quality")]
-                  (clj-result-k
-                   {:description (str "Code review for: " file-path)
-                    :messages
-                    [{:role :user
-                      :content
-                      (str "Please perform a thorough code review of the file at: "
-                           file-path "\n\n"
-                           "Focus areas: " focus-areas "\n\n"
-                           "Consider:\n"
-                           "1. Code style and Clojure idioms\n"
-                           "2. Performance implications\n"
-                           "3. Error handling\n"
-                           "4. Function complexity and readability\n"
-                           "5. Missing tests or edge cases\n\n"
-                           "Please use the read_file tool to examine the code, "
-                           "then provide detailed feedback.")}]})))})
-
+(defn -main [& args]
+  (start (parse-cli-args args)))
