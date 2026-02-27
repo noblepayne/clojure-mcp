@@ -60,29 +60,41 @@ Examples:
                        :description "Optional nREPL port to evaluate on. If not specified, uses the default port. Useful for evaluating on different nREPL servers (e.g., ClojureScript via shadow-cljs)."}}
    :required [:code]})
 
+(defn- coerce-int [v]
+  (cond
+    (number? v) (int v)
+    (string? v) (try (Integer/parseInt v) (catch Exception _ nil))
+    :else nil))
+
 (defmethod tool-system/validate-inputs ::clojure-eval [{:keys [nrepl-client-atom]} inputs]
-  (let [{:keys [code timeout_ms port]} inputs]
+  (let [code (:code inputs)
+        timeout_ms (coerce-int (:timeout_ms inputs))
+        port (coerce-int (:port inputs))]
     (when-not code
       (throw (ex-info (str "Missing required parameter: code " (pr-str inputs))
                       {:inputs inputs})))
-    (when (and timeout_ms (not (number? timeout_ms)))
-      (throw (ex-info (str "Error parameter must be number: timeout_ms " (pr-str inputs))
+    (when (and (:timeout_ms inputs) (nil? timeout_ms))
+      (throw (ex-info (str "Parameter timeout_ms must be a valid number: " (:timeout_ms inputs))
                       {:inputs inputs})))
-    (when (and port (not (pos-int? port)))
-      (throw (ex-info (str "Error parameter must be positive integer: port " (pr-str inputs))
+    (when (and (:port inputs) (or (nil? port) (not (pos? port))))
+      (throw (ex-info (str "Parameter port must be a positive integer: " (:port inputs))
                       {:inputs inputs})))
     ;; Resolve effective port: provided, configured, or from .nrepl-port file
     (let [service @nrepl-client-atom
           project-dir (config/get-nrepl-user-dir service)
+          cwd (System/getProperty "user.dir")
           effective-port (or port
                              (:port service)
-                             (nrepl/read-nrepl-port-file project-dir))]
+                             (nrepl/read-nrepl-port-file project-dir)
+                             (nrepl/read-nrepl-port-file cwd))]
       (when-not effective-port
         (throw (ex-info "No nREPL port available. Please provide :port parameter, start server with a port configured, or ensure .nrepl-port file exists in project directory."
                         {:inputs inputs
-                         :project-dir project-dir})))
-      ;; Return inputs with resolved port
-      (assoc inputs :port effective-port))))
+                         :project-dir project-dir
+                         :cwd cwd})))
+      ;; Return inputs with resolved port and coerced types
+      (cond-> (assoc inputs :port effective-port)
+        timeout_ms (assoc :timeout_ms timeout_ms)))))
 
 (defmethod tool-system/execute-tool ::clojure-eval [{:keys [nrepl-client-atom timeout session-type]}
                                                     {:keys [timeout_ms port] :as inputs}]
