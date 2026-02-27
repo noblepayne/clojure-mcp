@@ -213,6 +213,7 @@
        (log/debug "Applied config profile:" config-profile))
      (log/debug "Final processed config:" processed-config)
 
+     (log/info "Final allowed-directories configuration:" (:allowed-directories processed-config))
      processed-config)))
 
 (defn get-config [nrepl-client-map k]

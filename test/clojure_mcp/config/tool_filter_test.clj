@@ -82,7 +82,7 @@
 (deftest test-enable-and-disable-tools-env-vars
   (testing "Both env vars can be used together"
     (binding [config/*env-overrides* {"ENABLE_TOOLS" "bash,grep,eval_code"
-                                       "DISABLE_TOOLS" "bash"}]
+                                      "DISABLE_TOOLS" "bash"}]
       (let [nrepl-map {::config/config {}}]
         ;; bash is in enable but also in disable - disable wins
         (is (false? (config/tool-id-enabled? nrepl-map :bash)))

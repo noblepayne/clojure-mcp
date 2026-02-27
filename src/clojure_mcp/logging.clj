@@ -32,13 +32,11 @@
          log-level :debug}}]
   (timbre/set-config!
    {:appenders (if enable-logging?
-                 {:spit (assoc
-                         (timbre/spit-appender {:fname log-file})
-                         :enabled? enable-logging?
-                         :min-level (or log-level :report)
-                         :ns-filter (if enable-logging?
-                                      {:allow #{"clojure-mcp.*"}}
-                                      {:deny #{"*"}}))}
+                 {:println (assoc
+                            (timbre/println-appender {:stream :std-err})
+                            :enabled? enable-logging?
+                            :min-level (or log-level :report)
+                            :ns-filter {:allow #{"clojure-mcp.*"}})}
                  {})}))
 
 (defn configure-dev-logging!

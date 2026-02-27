@@ -25,7 +25,7 @@
                            (re-pattern (str "(?i)" p))
                            (catch java.util.regex.PatternSyntaxException e
                              (throw (ex-info (str "Invalid pattern: " (.getMessage e))
-                                            {:pattern p})))))
+                                             {:pattern p})))))
             deps (->> jars
                       (keep deps-sources/parse-maven-coords)
                       (map (fn [{:keys [group artifact version]}]

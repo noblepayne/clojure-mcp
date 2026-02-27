@@ -256,7 +256,7 @@
          ;; Other error - re-throw
          (throw e))))))
 
-(defn fetch-config [nrepl-client-map config-file cli-env-type env-type project-dir config-profile]
+(defn fetch-config [nrepl-client-map config-file cli-env-type env-type project-dir config-profile allowed-directories]
   (let [user-dir (nrepl/fetch-project-directory nrepl-client-map env-type project-dir)]
     (when-not user-dir
       (log/warn "Could not determine working directory")
@@ -264,11 +264,15 @@
     (log/info "Working directory set to:" user-dir)
 
     (let [config (load-config-handling-validation-errors config-file user-dir config-profile)
+          ;; Merge CLI-provided allowed-directories into config
+          config-with-cli-dirs (if (seq allowed-directories)
+                                 (update config :allowed-directories #(vec (distinct (concat % allowed-directories))))
+                                 config)
           final-env-type (or cli-env-type
-                             (if (contains? config :nrepl-env-type)
-                               (:nrepl-env-type config)
+                             (if (contains? config-with-cli-dirs :nrepl-env-type)
+                               (:nrepl-env-type config-with-cli-dirs)
                                env-type))]
-      (assoc nrepl-client-map ::config/config (assoc config :nrepl-env-type final-env-type)))))
+      (assoc nrepl-client-map ::config/config (assoc config-with-cli-dirs :nrepl-env-type final-env-type)))))
 
 (defn create-and-start-nrepl-connection
   "Creates an nREPL client map and loads configuration.
@@ -288,29 +292,34 @@
    - If :config-profile is provided, merges profile overlay on top of base config
 
    Returns the configured nrepl-client-map with ::config/config attached."
-  [{:keys [project-dir config-file config-profile port] :as initial-config}]
+   [{:keys [project-dir config-file config-profile port allowed-directories] :as initial-config}]
+  (log/info "Initializing nREPL connection with project-dir:" project-dir "and additional allowed-dirs:" allowed-directories)
   (if port
     (log/info "Creating nREPL client for port" port)
     (log/info "Starting without nREPL connection (project-dir mode)"))
   (try
-    (let [nrepl-client-map (nrepl/create (dissoc initial-config :project-dir :nrepl-env-type :config-profile))
+    (let [nrepl-client-map (nrepl/create (dissoc initial-config :project-dir :nrepl-env-type :config-profile :allowed-directories))
           cli-env-type (:nrepl-env-type initial-config)
           _ (log/info "nREPL client map created")]
       (if project-dir
-        ;; Project dir provided - load config directly, no REPL query needed
+         ;; Project dir provided - load config directly, no REPL query needed
         (let [user-dir (.getCanonicalPath (io/file project-dir))
               _ (log/info "Working directory set to:" user-dir)
               config (load-config-handling-validation-errors config-file user-dir config-profile)
-              ;; Use cli-env-type or config's env-type, default to :clj
+               ;; Merge CLI-provided allowed-directories into config
+              config-with-cli-dirs (if (seq allowed-directories)
+                                     (update config :allowed-directories #(vec (distinct (concat % allowed-directories))))
+                                     config)
+               ;; Use cli-env-type or config's env-type, default to :clj
               final-env-type (or cli-env-type
-                                 (:nrepl-env-type config)
+                                 (:nrepl-env-type config-with-cli-dirs)
                                  :clj)]
-          (assoc nrepl-client-map ::config/config (assoc config :nrepl-env-type final-env-type)))
-        ;; No project dir - need to query REPL (requires port)
+          (assoc nrepl-client-map ::config/config (assoc config-with-cli-dirs :nrepl-env-type final-env-type)))
+         ;; No project dir - need to query REPL (requires port)
         (let [;; Detect environment type (uses describe op, no full init needed)
               env-type (nrepl/detect-nrepl-env-type nrepl-client-map)
               _ (nrepl/set-port-env-type! nrepl-client-map env-type)]
-          (fetch-config nrepl-client-map config-file cli-env-type env-type project-dir config-profile))))
+          (fetch-config nrepl-client-map config-file cli-env-type env-type project-dir config-profile allowed-directories))))
     (catch Exception e
       (log/error e "Failed to create nREPL connection")
       (throw e))))
@@ -369,9 +378,10 @@
                                   (catch Exception _ false))))
 (s/def ::start-nrepl-cmd (s/coll-of string? :kind vector?))
 (s/def ::config-profile (s/or :keyword keyword? :symbol symbol? :string string?))
+(s/def ::allowed-directories (s/coll-of string? :kind vector?))
 (s/def ::nrepl-args (s/keys :req-un []
                             :opt-un [::port ::host ::config-file ::project-dir ::nrepl-env-type
-                                     ::start-nrepl-cmd ::config-profile]))
+                                     ::start-nrepl-cmd ::config-profile ::allowed-directories]))
 
 (def nrepl-client-atom (atom nil))
 

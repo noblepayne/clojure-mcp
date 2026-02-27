@@ -1,6 +1,6 @@
 ;; REPL Helper Functions for Clojure MCP
 
-(ns clj-mcp.repl-tools
+(ns clojure-mcp.repl-tools
   "Namespace containing helper functions for REPL-driven development"
   (:require [clojure.pprint :as pprint]
             [clojure.spec.alpha :as s]
@@ -129,7 +129,7 @@
           ;; Exact namespace match - return all vars in that namespace
           exact-ns
           (map #(str exact-ns "/" %)
-            (map name (keys (ns-publics (find-ns (symbol exact-ns))))))
+               (map name (keys (ns-publics (find-ns (symbol exact-ns))))))
 
           ;; Namespace prefix - return matching namespaces
           (and (not has-ns) (some #(.startsWith ^String % prefix) all-ns-strs))
@@ -150,9 +150,9 @@
           :else
           (sort (distinct (mapcat (fn [ns]
                                     (let [matching-symbols (filter #(.startsWith ^String (name %) prefix)
-                                                             (keys (ns-publics ns)))]
+                                                                   (keys (ns-publics ns)))]
                                       (map name matching-symbols)))
-                            (all-ns)))))]
+                                  (all-ns)))))]
     (println (str "Completions for '" prefix "':"))
     (doseq [m (sort matches)]
       (println (str "  " m)))
@@ -163,34 +163,34 @@
   "Show help for REPL helper functions."
   []
   (println "REPL Helper Functions:")
-  (println "  clj-mcp.repl-tools/list-ns           - List all available namespaces")
-  (println "  clj-mcp.repl-tools/list-vars         - List all vars in namespace")
-  (println "  clj-mcp.repl-tools/doc-symbol        - Show documentation for symbol")
-  (println "  clj-mcp.repl-tools/doc-namespace     - Show documentation for a namespace")
-  (println "  clj-mcp.repl-tools/source-symbol     - Show source code for symbol")
-  (println "  clj-mcp.repl-tools/describe-spec     - Show detailed information about spec")
-  (println "  clj-mcp.repl-tools/find-symbols      - Find symbols matching pattern")
-  (println "  clj-mcp.repl-tools/complete          - Find completions for prefix")
-  (println "  clj-mcp.repl-tools/help              - Show this help message")
+  (println "  clojure-mcp.repl-tools/list-ns           - List all available namespaces")
+  (println "  clojure-mcp.repl-tools/list-vars         - List all vars in namespace")
+  (println "  clojure-mcp.repl-tools/doc-symbol        - Show documentation for symbol")
+  (println "  clojure-mcp.repl-tools/doc-namespace     - Show documentation for a namespace")
+  (println "  clojure-mcp.repl-tools/source-symbol     - Show source code for symbol")
+  (println "  clojure-mcp.repl-tools/describe-spec     - Show detailed information about spec")
+  (println "  clojure-mcp.repl-tools/find-symbols      - Find symbols matching pattern")
+  (println "  clojure-mcp.repl-tools/complete          - Find completions for prefix")
+  (println "  clojure-mcp.repl-tools/help              - Show this help message")
   (println)
   (println "Usage Examples:")
-  (println "  (clj-mcp.repl-tools/list-ns)                     ; List all namespaces")
-  (println "  (clj-mcp.repl-tools/list-vars 'clojure.string)   ; List functions in clojure.string")
-  (println "  (clj-mcp.repl-tools/doc-symbol 'map)             ; Show documentation for map")
-  (println "  (clj-mcp.repl-tools/doc-namespace 'clojure.repl) ; Show documentation for a namespace")
-  (println "  (clj-mcp.repl-tools/source-symbol 'map)          ; Show source code for map")
-  (println "  (clj-mcp.repl-tools/describe-spec :my/spec)      ; Show detailed information about a clojure spec")
-  (println "  (clj-mcp.repl-tools/find-symbols \"seq\")          ; Find symbols containing \"seq\" (namespace/symbol)")
-  (println "  (clj-mcp.repl-tools/find-symbols #\".*math.*\")    ; Find symbols matching regex pattern")
-  (println "  (clj-mcp.repl-tools/complete \"clojure.string/j\") ; Find completions for prefix")
+  (println "  (clojure-mcp.repl-tools/list-ns)                     ; List all namespaces")
+  (println "  (clojure-mcp.repl-tools/list-vars 'clojure.string)   ; List functions in clojure.string")
+  (println "  (clojure-mcp.repl-tools/doc-symbol 'map)             ; Show documentation for map")
+  (println "  (clojure-mcp.repl-tools/doc-namespace 'clojure.repl) ; Show documentation for a namespace")
+  (println "  (clojure-mcp.repl-tools/source-symbol 'map)          ; Show source code for map")
+  (println "  (clojure-mcp.repl-tools/describe-spec :my/spec)      ; Show detailed information about a clojure spec")
+  (println "  (clojure-mcp.repl-tools/find-symbols \"seq\")          ; Find symbols containing \"seq\" (namespace/symbol)")
+  (println "  (clojure-mcp.repl-tools/find-symbols #\".*math.*\")    ; Find symbols matching regex pattern")
+  (println "  (clojure-mcp.repl-tools/complete \"clojure.string/j\") ; Find completions for prefix")
   (println)
   (println "For convenience, you can require the namespace with an alias:")
-  (println "  (require '[clj-mcp.repl-tools :as rt])")
+  (println "  (require '[clojure-mcp.repl-tools :as rt])")
   (println "  (rt/list-ns)")
   (println)
   (println "To import all functions into the current namespace:")
-  (println "  (use 'clj-mcp.repl-tools)"))
+  (println "  (use 'clojure-mcp.repl-tools)"))
 
 ;; Print loading message
-(println "REPL tools loaded in namespace clj-mcp.repl-tools")
-(println "Type (clj-mcp.repl-tools/help) for more information")
+(println "REPL tools loaded in namespace clojure-mcp.repl-tools")
+(println "Type (clojure-mcp.repl-tools/help) for more information")

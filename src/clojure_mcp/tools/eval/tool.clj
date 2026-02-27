@@ -31,24 +31,24 @@ IMPORTANT: When using `require` to reload namespaces ALWAYS use `:reload` to ens
 
 PORT PARAMETER: You can optionally specify a different nREPL port to evaluate on. This is useful when you have multiple nREPL servers running (e.g., a Clojure server and a ClojureScript server via shadow-cljs). The port will be lazily initialized on first use.
 
-REPL helper functions are automatically loaded in the 'clj-mcp.repl-tools' namespace, providing convenient namespace and symbol exploration:
+REPL helper functions are automatically loaded in the 'clojure-mcp.repl-tools' namespace, providing convenient namespace and symbol exploration:
 
 Namespace/Symbol inspection functions:
-  clj-mcp.repl-tools/list-ns           - List all available namespaces
-  clj-mcp.repl-tools/list-vars         - List all vars in namespace
-  clj-mcp.repl-tools/doc-symbol        - Show documentation for symbol
-  clj-mcp.repl-tools/source-symbol     - Show source code for symbol
-  clj-mcp.repl-tools/find-symbols      - Find symbols matching pattern
-  clj-mcp.repl-tools/complete          - Find completions for prefix
-  clj-mcp.repl-tools/help              - Show this help message
+  clojure-mcp.repl-tools/list-ns           - List all available namespaces
+  clojure-mcp.repl-tools/list-vars         - List all vars in namespace
+  clojure-mcp.repl-tools/doc-symbol        - Show documentation for symbol
+  clojure-mcp.repl-tools/source-symbol     - Show source code for symbol
+  clojure-mcp.repl-tools/find-symbols      - Find symbols matching pattern
+  clojure-mcp.repl-tools/complete          - Find completions for prefix
+  clojure-mcp.repl-tools/help              - Show this help message
 
 Examples:
-  (clj-mcp.repl-tools/list-ns)                     ; List all namespaces
-  (clj-mcp.repl-tools/list-vars 'clojure.string)   ; List functions in clojure.string
-  (clj-mcp.repl-tools/doc-symbol 'map)             ; Show documentation for map
-  (clj-mcp.repl-tools/source-symbol 'map)          ; Show source code for map
-  (clj-mcp.repl-tools/find-symbols \"seq\")          ; Find symbols containing \"seq\"
-  (clj-mcp.repl-tools/complete \"clojure.string/j\") ; Find completions for prefix")
+  (clojure-mcp.repl-tools/list-ns)                     ; List all namespaces
+  (clojure-mcp.repl-tools/list-vars 'clojure.string)   ; List functions in clojure.string
+  (clojure-mcp.repl-tools/doc-symbol 'map)             ; Show documentation for map
+  (clojure-mcp.repl-tools/source-symbol 'map)          ; Show source code for map
+  (clojure-mcp.repl-tools/find-symbols \"seq\")          ; Find symbols containing \"seq\"
+  (clojure-mcp.repl-tools/complete \"clojure.string/j\") ; Find completions for prefix")
 
 (defmethod tool-system/tool-schema ::clojure-eval [_]
   {:type :object

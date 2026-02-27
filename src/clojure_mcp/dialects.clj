@@ -63,7 +63,7 @@
 (defmethod load-repl-helpers-exp :clj
   [_]
   ;; For Clojure, we load the helpers from resources
-  [(file-utils/slurp-utf8 (io/resource "clojure-mcp/repl_helpers.clj"))
+  [(file-utils/slurp-utf8 (io/resource "clojure_mcp/repl_tools.clj"))
    "(in-ns 'user)"])
 
 (defmethod load-repl-helpers-exp :default
